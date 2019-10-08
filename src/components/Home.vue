@@ -1,18 +1,17 @@
 <template>
 <div>
-    <b-container fluid>
+    <b-container fluid class="main">
         <b-row>
-            <b-col cols="2" class="position-fixed test">
+            <b-col cols="2" class="position-fixed divider">
                 <b-nav class="flex-sm-column text-center mt-5">
                     <b-nav-item>Подразделение 1</b-nav-item>
                     <b-nav-item disabled>Подразделение 2</b-nav-item>
                     <b-nav-item>Подразделение 3</b-nav-item>
                     <b-nav-item>Подразделение 4</b-nav-item>
-                    <b-nav-item href="/subdivisions"><b-button variant="link" >Подробнее о подразделениях</b-button></b-nav-item>
+                    <b-nav-item href="/subdivisions" class="mt-5"><b-button variant="outline-primary" >Подробнее о подразделениях</b-button></b-nav-item>
                 </b-nav>
             </b-col>
-            <b-col offset="2" class="flex-sm-column">
-
+            <b-col offset="2" class="flex-sm-column" v-if="!inProgress">
                 <b-table hover
                          id="my-table"
                          v-bind:items="items"
@@ -27,69 +26,164 @@
                     </template>
 
                     <template v-slot:cell(actions)="row">
-                        <b-button size="sm" class="mr-2" variant="warning">
+                      <b-button-group class="mx-1">
+                        <b-button size="sm"  variant="warning" v-on:click="modalEditShow = !modalEditShow">
                             <font-awesome-icon icon="edit"></font-awesome-icon>
                         </b-button>
-                        <b-button size="sm" class="mr-2" variant="danger">
+                        <b-button size="sm"  variant="danger" v-on:click="modalDeleteShow = !modalDeleteShow">
                             <font-awesome-icon icon="trash"></font-awesome-icon>
                         </b-button>
+                      </b-button-group>
                     </template>
 
                     <template v-slot:row-details="row">
                         <b-card img-src="https://pbs.twimg.com/profile_images/771151978634153985/3JSf8oYk_400x400.jpg" img-alt="Card image" img-left>
                             <b-row class="mb-2">
                                 <b-col sm="3" class="text-sm-right"><b>ФИО:</b></b-col>
-                                <b-col>{{ row.item.name }}</b-col>
+                                <b-col>{{ row.item.surname }} {{ row.item.name }} {{ row.item.patronymic }}</b-col>
                             </b-row>
 
                             <b-row class="mb-2">
                                 <b-col sm="3" class="text-sm-right"><b>Дата рождения:</b></b-col>
                                 <b-col>{{ row.item.birthday }}</b-col>
                             </b-row>
+                          <b-row class="mb-2">
+                            <b-col sm="3" class="text-sm-right"><b>Оклад:</b></b-col>
+                            <b-col>{{ row.item.salary }}</b-col>
+                          </b-row>
                             <b-row class="mb-2">
                                 <b-col sm="3" class="text-sm-right"><b>Ставка:</b></b-col>
                                 <b-col>{{ row.item.rate }}</b-col>
                             </b-row>
-                            <b-row class="mb-2">
-                                <b-col sm="3" class="text-sm-right"><b>Оклад:</b></b-col>
-                                <b-col>{{ row.item.salary }}</b-col>
-                            </b-row>
+
                         </b-card>
                     </template>
                 </b-table>
-                <b-pagination
-                        v-model="currentPage"
-                        :total-rows="rows"
-                        :per-page="perPage"
-                        aria-controls="my-table"
-                        align="right"
-                        class="mr-5"
-                ></b-pagination>
+              <b-pagination
+                v-model="currentPage"
+                :total-rows="rows"
+                :per-page="perPage"
+                aria-controls="my-table"
+                align="right"
+                class="mr-5"
+              ></b-pagination>
 
             </b-col>
+          <b-col offset="2" class="flex-sm-column" v-else>
+            <div class="d-flex justify-content-center mb-3">
+              <b-spinner  variant="success" label="Spinning"></b-spinner>
+            </div>
+          </b-col>
         </b-row>
+      <b-modal
+        title="Удаление"
+        v-model="modalDeleteShow"
+        ok-title="Удалить"
+        ok-variant="danger"
+        cancel-title="Отменить"
+      >
+        Удалить информацию о сотруднике?
+      </b-modal>
+
+      <b-modal
+        size="lg"
+        title="Редактирование"
+        v-model="modalEditShow"
+        ok-title="Применить"
+        cancel-title="Отменить"
+      >
+        <b-container fluid>
+          <b-row class="mb-3">
+            <b-col cols="3">Фото: </b-col>
+            <b-col>
+              <b-img src="https://picsum.photos/300/150/?image=41" thumbnail fluid></b-img>
+            </b-col>
+
+          </b-row>
+          <b-row class="mb-3">
+            <b-col cols="3">ФИО:</b-col>
+            <b-col>
+              <b-form-input
+                v-model="fullName"
+                placeholder="Введите полное имя сотрудника"
+                aria-describedby="input-formatter-help"
+              ></b-form-input>
+            </b-col>
+          </b-row>
+
+          <b-row class="mb-3">
+            <b-col cols="3">Дата рождения: </b-col>
+            <b-col>
+              <date-picker :config="{format: 'DD.M.YYYY'}"></date-picker>
+            </b-col>
+          </b-row>
+
+          <b-row class="mb-3">
+            <b-col cols="4">Подразделение / Должность:</b-col>
+            <b-col>
+              <b-form-select
+                :options="subdivisions"
+              ></b-form-select>
+            </b-col>
+            <b-col>
+              <b-form-select
+                :options="posts"
+              ></b-form-select>
+            </b-col>
+          </b-row>
+
+          <b-row >
+            <b-col cols="3">Оклад / Ставка: </b-col>
+            <b-col>
+              <b-input-group prepend="₽">
+                <b-form-input
+                  type="number"
+                  min="0.00"
+                  placeholder="Оклад"
+                  aria-describedby="input-formatter-help"
+                ></b-form-input>
+              </b-input-group>
+            </b-col>
+            <b-col>
+              <b-form-input
+                type="number"
+                min="0.00"
+                placeholder="Ставка"
+                aria-describedby="input-formatter-help"
+              ></b-form-input>
+            </b-col>
+          </b-row>
+
+        </b-container>
+      </b-modal>
     </b-container>
 </div>
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   name: 'Home',
   data () {
     return {
+      inProgress: true,
       perPage: 10,
       currentPage: 1,
+      modalDeleteShow: false,
+      modalEditShow: false,
+      fullName: null,
       fields: [
         {
-          key: 'name',
+          key: 'shortName',
           label: 'Сотрудник'
         },
         {
-          key: 'place',
+          key: 'subdivision',
           label: 'Подразделение'
         },
         {
-          key: 'job',
+          key: 'post',
           label: 'Должность'
         },
         {
@@ -101,39 +195,35 @@ export default {
           label: 'Действия'
         }
       ],
-      items: [
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 },
-        { name: 'Иванов И.И.', place: 'Подразделение 1', job: 'Директор', birthday: '07-12-2019', rate: 1, salary: 250000 }
-      ]
+      items: [],
+      subdivisions: ['Подразделение 1', 'Подразделение 2', 'Подразделение 3', 'подразделение 4'],
+      posts: ['Директор', 'Руководитель проекта', 'Старший специалист', 'Специалист']
     }
   },
   computed: {
     rows () {
       return this.items.length
     }
+  },
+  mounted () {
+    axios
+      .get('http://musiclibrary/employees')
+      .then(response => {
+        this.inProgress = false
+        this.items = response.data.data
+        this.items.forEach(function (item) {
+          item.shortName = item.surname + ' ' + item.name[0] + '.' + item.patronymic[0] + '.'
+        })
+      })
   }
 }
 </script>
+// this.items.forEach(function (item) {
+//   item.shortName = item.surname + ' ' + item.name[0] + '. ' + item.patronymic[0] + '.';
+// })
 
 <style scoped lang="less">
-.container-fluid {
+.container-fluid.main {
     padding-top: 65px;
 
     .nav {
@@ -149,9 +239,15 @@ export default {
     }
 }
 
-.test {
+.divider {
     border-right: 1px solid #dee2e6;
     border-radius: 1px;
     height: 100%;
+}
+.spinner-border {
+  position: absolute;
+  top: 2000%;
+  width: 5rem;
+  height: 5rem;
 }
 </style>
