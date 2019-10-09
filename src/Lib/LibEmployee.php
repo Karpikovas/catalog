@@ -34,4 +34,46 @@ class LibEmployee
         inner join Post on Post.id = EmployeeHasPost.id_post
         ORDER BY surname;', $params);
   }
+
+  public function addEmployeePhoto(string $id, ?string $photo) {
+    $params = [
+        $photo,
+        $id
+    ];
+    return $this->Db->exec('
+        UPDATE Employee SET 
+            photo=? 
+         WHERE id=?;',
+        $params
+    );
+  }
+
+  public function getPhotoPathByID(string $ID) {
+    $params = [
+        $ID
+    ];
+
+    return $this->Db->select('select photo from Employee where id = ?', $params);
+  }
+
+  public function updateEmployeeByID(string $id, ?string $surname, ?string $name, ?string $patronymic,
+                                     ?string $birthday, ?string $salary, ?string $rate): bool
+  {
+    $params = [
+        $surname,
+        $name,
+        $patronymic,
+        $birthday,
+        $salary,
+        $rate,
+        $id
+    ];
+
+    return $this->Db->exec('
+        UPDATE Track SET 
+            comment=? 
+         WHERE id=?;',
+        $params
+    );
+  }
 }

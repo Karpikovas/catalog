@@ -58,6 +58,14 @@ employees:
   path: /employees
   controller: App\Controller\EmployeeController::getEmployees
 
+upload_employee_photo:
+  path: /employees/{ID}/photo/add
+  controller: App\Controller\EmployeeController::uploadImage
+
+employee_photo:
+  path: /employees/{ID}/photo
+  controller: App\Controller\EmployeeController::downloadImage
+
 # ------------- Links for Subdividers
 subdividers:
   path: /subdivisions
