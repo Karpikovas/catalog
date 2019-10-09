@@ -66,7 +66,7 @@ export default {
 
 .spinner-border {
   position: absolute;
-  top: 50%;
+  top: 40%;
   width: 5rem;
   height: 5rem;
 }

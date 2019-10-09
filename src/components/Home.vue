@@ -1,18 +1,17 @@
 <template>
 <div>
     <b-container fluid class="main">
+      <template v-if="!inProgress">
         <b-row>
             <b-col cols="2" class="position-fixed divider">
-                <b-nav class="flex-sm-column text-center mt-5">
-                    <b-nav-item>Подразделение 1</b-nav-item>
-                    <b-nav-item disabled>Подразделение 2</b-nav-item>
-                    <b-nav-item>Подразделение 3</b-nav-item>
-                    <b-nav-item>Подразделение 4</b-nav-item>
+                <b-nav class="flex-sm-column text-center mt-2">
+                    <b-nav-text class="mb-3"> Подразделения </b-nav-text>
+                    <b-nav-item v-for="subdivision in subdivisions" v-bind:key="subdivision.id">{{ subdivision.name }}</b-nav-item>
                     <b-nav-item href="/subdivisions" class="mt-5"><b-button variant="outline-primary" >Подробнее о подразделениях</b-button></b-nav-item>
                 </b-nav>
             </b-col>
             <b-col offset="2" class="flex-sm-column" >
-              <template v-if="!inProgress">
+
                 <b-table hover
                          id="my-table"
                          v-bind:items="sortedItems"
@@ -32,7 +31,7 @@
 
                   <template v-slot:cell(actions)="row">
                     <b-button-group class="mx-1">
-                      <b-button size="sm"  variant="warning" v-on:click="modalEditShow = !modalEditShow">
+                      <b-button size="sm"  variant="warning" v-on:click="modalEditShow(row.item)" >
                         <font-awesome-icon icon="edit"></font-awesome-icon>
                       </b-button>
                       <b-button size="sm"  variant="danger" v-on:click="modalDeleteShow = !modalDeleteShow">
@@ -72,16 +71,16 @@
                   align="right"
                   class="mr-5"
                 ></b-pagination>
-              </template>
-              <template v-else>
-                <div class="d-flex justify-content-center mb-3">
-                  <b-spinner  variant="success" label="Spinning"></b-spinner>
-                </div>
-              </template>
 
             </b-col>
 
         </b-row>
+      </template>
+      <template v-else>
+        <div class="d-flex justify-content-center mb-3">
+          <b-spinner  variant="success" label="Spinning"></b-spinner>
+        </div>
+      </template>
       <b-modal
         title="Удаление"
         v-model="modalDeleteShow"
@@ -93,9 +92,10 @@
       </b-modal>
 
       <b-modal
+        ref="editEmployeeModal"
+        id="edit-employee-modal"
         size="lg"
         title="Редактирование"
-        v-model="modalEditShow"
         ok-title="Применить"
         cancel-title="Отменить"
       >
@@ -103,7 +103,7 @@
           <b-row class="mb-3">
             <b-col cols="3">Фото: </b-col>
             <b-col>
-              <b-img src="https://picsum.photos/300/150/?image=41" thumbnail fluid></b-img>
+              <b-img :src="'http://musiclibrary/employees/' + editForm.id +'/photo'" img-left img-width="168" thumbnail fluid></b-img>
             </b-col>
 
           </b-row>
@@ -111,6 +111,7 @@
             <b-col cols="3">ФИО:</b-col>
             <b-col>
               <b-form-input
+                v-model="editForm.fullName"
                 placeholder="Введите полное имя сотрудника"
                 aria-describedby="input-formatter-help"
               ></b-form-input>
@@ -120,7 +121,7 @@
           <b-row class="mb-3">
             <b-col cols="3">Дата рождения: </b-col>
             <b-col>
-              <date-picker :config="{format: 'DD.M.YYYY'}"></date-picker>
+              <date-picker v-model="editForm.birthday" :value="editForm.birthday" :config="{format: 'YYYY-M-DD'}" wrap="true"></date-picker>
             </b-col>
           </b-row>
 
@@ -128,11 +129,15 @@
             <b-col cols="4">Подразделение / Должность:</b-col>
             <b-col>
               <b-form-select
+                v-model="editForm.subdivision"
                 :options="subdivisions"
+                value-field="name"
+                text-field="name"
               ></b-form-select>
             </b-col>
             <b-col>
               <b-form-select
+                v-model="editForm.post"
                 :options="posts"
               ></b-form-select>
             </b-col>
@@ -143,6 +148,7 @@
             <b-col>
               <b-input-group prepend="₽">
                 <b-form-input
+                  v-model="editForm.salary"
                   type="number"
                   min="0.00"
                   placeholder="Оклад"
@@ -152,6 +158,7 @@
             </b-col>
             <b-col>
               <b-form-input
+                v-model="editForm.rate"
                 type="number"
                 min="0.00"
                 placeholder="Ставка"
@@ -177,7 +184,16 @@ export default {
       perPage: 10,
       currentPage: 1,
       modalDeleteShow: false,
-      modalEditShow: false,
+      editForm: {
+        birthday: '',
+        id: '',
+        fullName: '',
+        photo: '',
+        salary: '',
+        rate: '',
+        subdivision: '',
+        post: ''
+      },
       fields: [
         {
           key: 'fullName',
@@ -218,18 +234,29 @@ export default {
   methods: {
     fullName: function (surname, name, patronymic) {
       return surname + ' ' + name[0] + '.' + patronymic[0] + '.'
+    },
+    modalEditShow: function (employee) {
+      this.editForm = employee
+      this.editForm.fullName = employee.surname + ' ' + employee.name + ' ' + employee.patronymic
+      this.$refs.editEmployeeModal.show()
     }
   },
   mounted: function () {
-    axios
-      .get('http://musiclibrary/employees')
+    axios.all([
+      axios.get('http://musiclibrary/employees'),
+      axios.get('http://musiclibrary/subdivisions')
+    ])
       .then(response => {
         this.inProgress = false
-        this.items = response.data.data
-        // this.items.forEach(function (item) {
-        //   item.shortName = item.surname + ' ' + item.name[0] + '.' + item.patronymic[0] + '.'
-        // })
+        this.items = response[0].data.data
+        this.subdivisions = response[1].data.data
       })
+    // axios
+    //   .get('http://musiclibrary/employees')
+    //   .then(response => {
+    //     this.inProgress = false
+    //     this.items = response.data.data
+    //   })
   }
 }
 </script>
@@ -248,6 +275,12 @@ export default {
                 color: dimgrey;
             }
         }
+
+        span {
+          border-bottom: 2px solid #dee2e6;
+          border-radius: 1px;
+        }
+
     }
 }
 
@@ -258,7 +291,7 @@ export default {
 }
 .spinner-border {
   position: absolute;
-  top: 2000%;
+  top: 40%;
   width: 5rem;
   height: 5rem;
 }
