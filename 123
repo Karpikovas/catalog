@@ -1,0 +1,11 @@
+<div>
+    <div v-if="" v-for="(item, i) in items">
+        <slot name="row" :data="item" >row # {{i + 1}}</slot>
+    </div>
+</div>
+
+<super-list>
+    <template v-slot:row="data">
+        <button :value="{{ data.title }}" />
+    </template>
+</super-list>
