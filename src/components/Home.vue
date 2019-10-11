@@ -11,7 +11,14 @@
                 </b-nav>
             </b-col>
             <b-col offset="2" class="flex-sm-column" >
-
+              <b-alert
+                      :show="dismissCountDown"
+                      dismissible
+                      :variant="isSuccess ? 'success' : 'danger'"
+                      @dismissed="dismissCountDown=0"
+              >
+                <p>{{ alertMessage }}</p>
+              </b-alert>
                 <b-table hover
                          id="my-table"
                          v-bind:items="sortedItems"
@@ -34,7 +41,7 @@
                       <b-button size="sm"  variant="warning" v-on:click="modalEditShow(row.item)" >
                         <font-awesome-icon icon="edit"></font-awesome-icon>
                       </b-button>
-                      <b-button size="sm"  variant="danger" v-on:click="modalDeleteShow = !modalDeleteShow">
+                      <b-button size="sm"  variant="danger" v-on:click="modalDeleteShow(row.item.id)">
                         <font-awesome-icon icon="trash"></font-awesome-icon>
                       </b-button>
                     </b-button-group>
@@ -83,9 +90,10 @@
       </template>
       <b-modal
         title="Удаление"
-        v-model="modalDeleteShow"
+        ref="deleteEmployeeModal"
         ok-title="Удалить"
         ok-variant="danger"
+        @ok="onDeleteClick"
         cancel-title="Отменить"
       >
         Удалить информацию о сотруднике?
@@ -98,12 +106,25 @@
         title="Редактирование"
         ok-title="Применить"
         cancel-title="Отменить"
+        @ok="onOkClick"
       >
         <b-container fluid>
           <b-row class="mb-3">
             <b-col cols="3">Фото: </b-col>
             <b-col>
-              <b-img :src="'http://musiclibrary/employees/' + editForm.id +'/photo'" img-left img-width="168" thumbnail fluid></b-img>
+              <b-img :src="editForm.photo" img-left width="168" height="168" thumbnail fluid></b-img>
+            </b-col>
+
+          </b-row>
+          <b-row class="mb-3">
+            <b-col cols="3"></b-col>
+            <b-col>
+              <b-form-file
+                      v-model="editForm.file"
+                      v-on:change.prevent="onFileChange($event, editForm)"
+                      browse-text="Открыть"
+                      placeholder="Изменить фотографию..."
+              ></b-form-file>
             </b-col>
 
           </b-row>
@@ -121,7 +142,7 @@
           <b-row class="mb-3">
             <b-col cols="3">Дата рождения: </b-col>
             <b-col>
-              <date-picker v-model="editForm.birthday" :value="editForm.birthday" :config="{format: 'YYYY-M-DD'}" wrap="true"></date-picker>
+              <date-picker v-model="editForm.birthday"  :config="{format: 'YYYY-M-DD'}" wrap></date-picker>
             </b-col>
           </b-row>
 
@@ -139,6 +160,8 @@
               <b-form-select
                 v-model="editForm.post"
                 :options="posts"
+                value-field="name"
+                text-field="name"
               ></b-form-select>
             </b-col>
           </b-row>
@@ -169,21 +192,28 @@
 
         </b-container>
       </b-modal>
+
+
     </b-container>
 </div>
 </template>
 
 <script>
 import axios from 'axios'
+import { bus } from '../main'
 
 export default {
+  props: ['subdivisions', 'posts'],
   name: 'Home',
   data () {
     return {
       inProgress: true,
       perPage: 10,
       currentPage: 1,
-      modalDeleteShow: false,
+      dismissSecs: 10,
+      dismissCountDown: 0,
+      alertMessage: 'Информация успешно добавлена!',
+      isSuccess: true,
       editForm: {
         birthday: '',
         id: '',
@@ -192,8 +222,10 @@ export default {
         salary: '',
         rate: '',
         subdivision: '',
-        post: ''
+        post: '',
+        file: null
       },
+      items: [],
       fields: [
         {
           key: 'fullName',
@@ -215,10 +247,7 @@ export default {
           key: 'actions',
           label: 'Действия'
         }
-      ],
-      items: [],
-      subdivisions: ['Подразделение 1', 'Подразделение 2', 'Подразделение 3', 'Подразделение 4'],
-      posts: ['Директор', 'Руководитель проекта', 'Старший специалист', 'Специалист']
+      ]
     }
   },
   computed: {
@@ -233,30 +262,96 @@ export default {
   },
   methods: {
     fullName: function (surname, name, patronymic) {
-      return surname + ' ' + name[0] + '.' + patronymic[0] + '.'
+      let fullName = surname + ' ' + name[0] + '.'
+      if (patronymic) {
+        fullName += patronymic[0] + '.'
+      }
+      return fullName
     },
     modalEditShow: function (employee) {
-      this.editForm = employee
+      this.editForm = Object.assign({}, employee)
       this.editForm.fullName = employee.surname + ' ' + employee.name + ' ' + employee.patronymic
+      this.editForm.photo = `http://musiclibrary/employees/${employee.id}/photo`
       this.$refs.editEmployeeModal.show()
+    },
+    modalDeleteShow: function (id) {
+      this.deleteId = id;
+      this.$refs.deleteEmployeeModal.show()
+    },
+    selectImage: function (form) {
+      let reader = new FileReader()
+      reader.form = form
+      reader.onload = this.onImageLoad
+      reader.readAsDataURL(form.file)
+    },
+    onFileChange: function (event, form) {
+      form.file = event.target.files[0]
+      this.selectImage(form)
+    },
+    onImageLoad: function (event) {
+      event.target.form.photo = event.target.result
+    },
+    onOkClick: function () {
+      this.inProgress = true
+      let promises = []
+      if (this.editForm.file) {
+        let formData = new FormData()
+
+        formData.append('path', this.editForm.file)
+        promises.push(axios.post(`http://musiclibrary/employees/${this.editForm.id}/photo/update`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }))
+      }
+      promises.push(axios.post(`http://musiclibrary/employees/${this.editForm.id}/update`, {
+        surname: this.editForm.fullName.split(' ')[0],
+        name: this.editForm.fullName.split(' ')[1],
+        patronymic: this.editForm.fullName.split(' ')[2],
+        birthday: this.editForm.birthday,
+        salary: this.editForm.salary,
+        rate: this.editForm.rate,
+        subdivison: this.editForm.subdivision,
+        post: this.editForm.post
+      }))
+
+      axios.all(promises)
+        .then(response => {
+          this.alertMsg(true, 'Информация о сотруднике успешно обновлена!')
+          this.getEmployees()
+        })
+    },
+    onDeleteClick: function () {
+      this.inProgress = true
+      axios.post(`http://musiclibrary/employees/${this.deleteId}/delete`)
+        .then(response => {
+          this.alertMsg(false, 'Информация о сотруднике успешно удалена!')
+          this.getEmployees()
+        })
+    },
+    getEmployees: function () {
+      axios.get('http://musiclibrary/employees')
+        .then(response => {
+          console.log(response)
+          this.inProgress = false
+          this.items = response.data.data
+        })
+    },
+    alertMsg: function (type, msg) {
+      this.alertMessage = msg
+      this.isSuccess = type
+      this.dismissCountDown = this.dismissSecs
     }
   },
   mounted: function () {
-    axios.all([
-      axios.get('http://musiclibrary/employees'),
-      axios.get('http://musiclibrary/subdivisions')
-    ])
-      .then(response => {
-        this.inProgress = false
-        this.items = response[0].data.data
-        this.subdivisions = response[1].data.data
-      })
-    // axios
-    //   .get('http://musiclibrary/employees')
-    //   .then(response => {
-    //     this.inProgress = false
-    //     this.items = response.data.data
-    //   })
+    this.getEmployees()
+    bus.$on('getEmployees', () => {
+      this.getEmployees()
+      this.alertMsg(true, 'Информация о сотруднике успешно добавлена!')
+    })
+    bus.$on('Update', () => { this.inProgress = true })
+  },
+  watch: {
   }
 }
 </script>
