@@ -13,8 +13,9 @@ use Symfony\Component\HttpFoundation\Request;
 
 class EmployeeController extends AbstractController
 {
-  public function getEmployees(LibEmployee $employee) {
-    $employees = $employee->getEmployees();
+  public function getEmployees(Request $request,LibEmployee $employee) {
+    $subdivision = $request->query->get('subdivision');
+    $employees = $employee->getEmployees($subdivision);
     return $this->json(['status' => "OK", 'message' => [], 'data' => $employees]);
   }
 
@@ -92,7 +93,7 @@ class EmployeeController extends AbstractController
       $employee->updateEmployeePostByID($ID, $post);
     }
 
-    //$employee->updateEmployeeByID($ID, $surname, $name, $patronymic, $birthday, $salary, $rate);
+    $employee->updateEmployeeByID($ID, $surname, $name, $patronymic, $birthday, $salary, $rate);
 
     return $this->json(['status' => "OK", 'message' => [], 'data' => [$employee->checkEmployeeSubdivisionByID($ID)]]);
   }

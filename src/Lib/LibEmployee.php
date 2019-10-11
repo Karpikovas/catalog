@@ -13,9 +13,32 @@ class LibEmployee
     $this->Db = $Db;
   }
 
-  public function getEmployees() {
+  public function getEmployees($subdivision) {
     $params = [];
-    return $this->Db->select('
+    if ($subdivision) {
+      $params = [
+          $subdivision
+      ];
+      return $this->Db->select('
+        SELECT 
+          Employee.id, 
+            surname, 
+            Employee.name,
+            patronymic, 
+            DATE(birthday) as birthday, 
+            photo,
+            salary,
+            rate, 
+            Subdivision.name as subdivision,
+            Post.name as post
+        FROM catalog.Employee
+        left join EmployeeInSubdivision on Employee.id = EmployeeInSubdivision.id_employee
+        inner join Subdivision on Subdivision.id = EmployeeInSubdivision.id_subdivison and EmployeeInSubdivision.id_subdivison = ?
+        left join EmployeeHasPost on Employee.id = EmployeeHasPost.id_employee
+        left join Post on Post.id = EmployeeHasPost.id_post
+        ORDER BY surname;', $params);
+    } else {
+      return $this->Db->select('
         SELECT 
           Employee.id, 
             surname, 
@@ -33,6 +56,8 @@ class LibEmployee
         left join EmployeeHasPost on Employee.id = EmployeeHasPost.id_employee
         left join Post on Post.id = EmployeeHasPost.id_post
         ORDER BY surname;', $params);
+    }
+
   }
 
   public function updateEmployeePhoto(string $id, ?string $photo) {
