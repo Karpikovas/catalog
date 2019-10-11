@@ -143,7 +143,7 @@
           <b-row class="mb-3">
             <b-col cols="3">Дата рождения: </b-col>
             <b-col>
-              <date-picker v-model="editForm.birthday"  :config="{format: 'YYYY-M-DD'}" wrap></date-picker>
+              <date-picker v-model="editForm.birthday"  :config="{format: 'YYYY-M-DD'}"></date-picker>
             </b-col>
           </b-row>
 
