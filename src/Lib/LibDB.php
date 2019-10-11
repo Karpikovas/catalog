@@ -70,4 +70,10 @@ class LibDB
     $stmt->closeCursor();
     return $error;
   }
+
+  public function lastID()
+  {
+    $this->testInitConnection();
+    return $this->connection->lastInsertId();
+  }
 }

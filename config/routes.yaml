@@ -58,15 +58,39 @@ employees:
   path: /employees
   controller: App\Controller\EmployeeController::getEmployees
 
+employee_add:
+  path: /employees/add
+  controller: App\Controller\EmployeeController::addEmployee
+
+employee_update:
+  path: /employees/{ID}/update
+  controller: App\Controller\EmployeeController::updateEmployeeInfo
+
+employee_delete:
+  path: /employees/{ID}/delete
+  controller: App\Controller\EmployeeController::deleteEmployee
+
 upload_employee_photo:
-  path: /employees/{ID}/photo/add
+  path: /employees/{ID}/photo/update
   controller: App\Controller\EmployeeController::uploadImage
 
 employee_photo:
   path: /employees/{ID}/photo
   controller: App\Controller\EmployeeController::downloadImage
 
-# ------------- Links for Subdividers
-subdividers:
+# ------------- Links for Subdivisions
+subdivisions:
   path: /subdivisions
-  controller: App\Controller\SubdivisionController::getSubdivisions
+  controller: App\Controller\SubdivisionController::getSubdivisionsAndPosts
+
+subdivision_add:
+  path: /subdivisions/sub/add
+  controller: App\Controller\SubdivisionController::addSubdivision
+
+subdivision_update:
+  path: /subdivisions/sub/{ID}/update
+  controller: App\Controller\SubdivisionController::updateSubdivision
+
+subdivision_delete:
+  path: /subdivisions/sub/{ID}/delete
+  controller: App\Controller\SubdivisionController::deleteSubdivision
