@@ -47,6 +47,7 @@
           <b-col cols="3">ФИО:</b-col>
           <b-col>
             <b-form-input
+                    :state="null"
                     v-model="addForm.fullName"
                     placeholder="Введите полное имя сотрудника"
                     aria-describedby="input-formatter-help"

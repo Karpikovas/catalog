@@ -6,7 +6,8 @@
             <b-col cols="2" class="position-fixed divider">
                 <b-nav class="flex-sm-column text-center mt-2">
                     <b-nav-text class="mb-3"> Подразделения </b-nav-text>
-                    <b-nav-item v-for="subdivision in subdivisions" v-bind:key="subdivision.id">{{ subdivision.name }}</b-nav-item>
+                    <b-nav-item v-on:click="changeFilter('')">Все</b-nav-item>
+                    <b-nav-item v-for="subdivision in subdivisions" v-bind:key="subdivision.id" v-on:click="changeFilter(subdivision.name)">{{ subdivision.name }} </b-nav-item>
                     <b-nav-item href="/subdivisions" class="mt-5"><b-button variant="outline-primary" >Подробнее о подразделениях</b-button></b-nav-item>
                 </b-nav>
             </b-col>
@@ -192,8 +193,6 @@
 
         </b-container>
       </b-modal>
-
-
     </b-container>
 </div>
 </template>
@@ -226,6 +225,7 @@ export default {
         file: null
       },
       items: [],
+      currentFilter: null,
       fields: [
         {
           key: 'fullName',
@@ -255,12 +255,22 @@ export default {
       return this.items.length
     },
     sortedItems: function () {
-      return this.items.slice().sort(function (a, b) {
+      let newItems = this.items.slice().sort(function (a, b) {
         return (a.surname > b.surname) ? 1 : ((b.surname > a.surname) ? -1 : 0)
       })
+      if (this.currentFilter) {
+        return newItems.filter((item) => {
+          return item.subdivision === this.currentFilter
+        })
+      } else {
+        return newItems
+      }
     }
   },
   methods: {
+    changeFilter: function (name) {
+      this.currentFilter = name
+    },
     fullName: function (surname, name, patronymic) {
       let fullName = surname + ' ' + name[0] + '.'
       if (patronymic) {
@@ -275,7 +285,7 @@ export default {
       this.$refs.editEmployeeModal.show()
     },
     modalDeleteShow: function (id) {
-      this.deleteId = id;
+      this.deleteId = id
       this.$refs.deleteEmployeeModal.show()
     },
     selectImage: function (form) {
