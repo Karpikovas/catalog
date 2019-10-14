@@ -11,11 +11,13 @@ import 'pc-bootstrap4-datetimepicker/build/css/bootstrap-datetimepicker.css';
 import './registerServiceWorker'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+import Vuelidate from 'vuelidate'
 
 library.add(faBookmark, faEdit, faTrash)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.use(BootstrapVue)
 Vue.use(datePicker)
+Vue.use(Vuelidate)
 
 Vue.config.productionTip = false
 

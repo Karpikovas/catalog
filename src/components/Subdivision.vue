@@ -13,7 +13,7 @@
         </b-row>
 
       <template v-if="!inProgress">
-        <b-card v-for="(item, index) in subdivisions" :key="index" class="mb-3">
+        <b-card v-for="item in subdivisions" :key="item.id" class="mb-3">
           <b-row class="justify-content-md-end mb-3">
             <b-button-group class="mx-1">
               <b-button href="#" class="card-link" variant="info" v-on:click="modalEditShow(item)">
