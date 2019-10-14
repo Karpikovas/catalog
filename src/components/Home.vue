@@ -323,7 +323,8 @@ export default {
                     }
                 }))
             }
-            promises.push(axios.post(`http://musiclibrary/employees/${this.editForm.id}/update`, {
+            let data =  {
+                id: this.editForm.id,
                 surname: this.editForm.fullName.split(' ')[0],
                 name: this.editForm.fullName.split(' ')[1],
                 patronymic: this.editForm.fullName.split(' ')[2],
@@ -331,14 +332,21 @@ export default {
                 salary: this.editForm.salary,
                 rate: this.editForm.rate,
                 subdivison: this.editForm.subdivision,
-                post: this.editForm.post
-            }))
+                post: this.editForm.post,
+            }
+            promises.push(axios.post(`http://musiclibrary/employees/${this.editForm.id}/update`, data))
+
+            data.id = this.editForm.id
 
             axios.all(promises)
                 .then(response => {
                     this.date = new Date()
                     this.alertMsg(true, 'Информация о сотруднике успешно обновлена!')
-                    this.getEmployees()
+
+                    let targetIndex = this.items.findIndex(item => item.id === this.editForm.id)
+                    console.log(targetIndex)
+                    this.items.splice(targetIndex, 1, data);
+                    this.inProgress = false
                 })
         },
         onDeleteClick: function () {
@@ -346,7 +354,11 @@ export default {
             axios.post(`http://musiclibrary/employees/${this.deleteId}/delete`)
                 .then(response => {
                     this.alertMsg(false, 'Информация о сотруднике успешно удалена!')
-                    this.getEmployees()
+                    //this.getEmployees()
+                    this.items = this.items.filter((item) => {
+                        return item.id !== this.deleteId
+                    })
+                    this.inProgress = false
                 })
         },
         getEmployees: function () {
