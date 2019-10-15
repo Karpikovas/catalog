@@ -331,7 +331,7 @@ export default {
                 birthday: this.editForm.birthday,
                 salary: this.editForm.salary,
                 rate: this.editForm.rate,
-                subdivison: this.editForm.subdivision,
+                subdivision: this.editForm.subdivision,
                 post: this.editForm.post,
             }
             promises.push(axios.post(`http://musiclibrary/employees/${this.editForm.id}/update`, data))
@@ -344,8 +344,8 @@ export default {
                     this.alertMsg(true, 'Информация о сотруднике успешно обновлена!')
 
                     let targetIndex = this.items.findIndex(item => item.id === this.editForm.id)
-                    console.log(targetIndex)
                     this.items.splice(targetIndex, 1, data);
+
                     this.inProgress = false
                 })
         },
@@ -377,9 +377,10 @@ export default {
     },
     mounted: function () {
         this.getEmployees()
-        bus.$on('getEmployees', () => {
-            this.getEmployees()
+        bus.$on('addEmployee', (newEmployee) => {
+            this.items.push(newEmployee)
             this.alertMsg(true, 'Информация о сотруднике успешно добавлена!')
+            this.inProgress = false
         })
         bus.$on('Update', () => {
             this.inProgress = true

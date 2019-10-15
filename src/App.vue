@@ -126,7 +126,7 @@
 /* eslint-disable*/
 import axios from 'axios'
 import { required, between, numeric, decimal } from 'vuelidate/lib/validators'
-import {bus} from './main'
+import { bus } from './main'
 
 export default {
     data() {
@@ -202,22 +202,23 @@ export default {
         },
         onOkClick: function () {
 
-            this.$v.$touch()
-            if (!this.$v.$invalid) {
+            //this.$v.$touch()
+            //if (!this.$v.$invalid) {
                 bus.$emit('Update')
 
-                let data = JSON.stringify({
+                let data = {
                     surname: this.addForm.fullName.split(' ')[0],
                     name: this.addForm.fullName.split(' ')[1],
                     patronymic: this.addForm.fullName.split(' ')[2],
                     birthday: this.addForm.birthday,
                     salary: this.addForm.salary,
                     rate: this.addForm.rate,
-                    subdivison: this.addForm.subdivision,
+                    subdivision: this.addForm.subdivision,
                     post: this.addForm.post
-                })
+                }
+                let JData = JSON.stringify(data)
 
-                axios.post('http://musiclibrary/employees/add', data, {
+                axios.post('http://musiclibrary/employees/add', JData, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -225,6 +226,7 @@ export default {
                     .then(response => {
 
                         let id = response.data.data[0]
+                        data.id =id
                         if (this.addForm.file) {
                             let formData = new FormData()
 
@@ -235,62 +237,18 @@ export default {
                                 }
                             })
                                 .then(response => {
-                                    console.log('ID')
-                                    bus.$emit('getEmployees')
+
+                                    bus.$emit('addEmployee', data)
                                 })
                                 .catch(response => {
                                     console.log(response)
                                 })
                         } else {
-                            bus.$emit('getEmployees')
+                            bus.$emit('addEmployee', data)
                         }
                     })
-              }
         }
 
-
-        //     bus.$emit('Update')
-        //
-        //     let data = JSON.stringify({
-        //         surname: this.addForm.fullName.split(' ')[0],
-        //         name: this.addForm.fullName.split(' ')[1],
-        //         patronymic: this.addForm.fullName.split(' ')[2],
-        //         birthday: this.addForm.birthday,
-        //         salary: this.addForm.salary,
-        //         rate: this.addForm.rate,
-        //         subdivison: this.addForm.subdivision,
-        //         post: this.addForm.post
-        //     })
-        //
-        //     axios.post('http://musiclibrary/employees/add', data, {
-        //         headers: {
-        //             'Content-Type': 'application/json'
-        //         }
-        //     })
-        //         .then(response => {
-        //
-        //             let id = response.data.data[0]
-        //             if (this.addForm.file) {
-        //                 let formData = new FormData()
-        //
-        //                 formData.append('path', this.addForm.file)
-        //                 axios.post(`http://musiclibrary/employees/${id}/photo/update`, formData, {
-        //                     headers: {
-        //                         'Content-Type': 'multipart/form-data'
-        //                     }
-        //                 })
-        //                     .then(response => {
-        //                         console.log('ID')
-        //                         bus.$emit('getEmployees')
-        //                     })
-        //                     .catch(response => {
-        //                         console.log(response)
-        //                     })
-        //             } else {
-        //                 bus.$emit('getEmployees')
-        //             }
-        //         })
-        // }
     },
     mounted() {
         console.log(this.$v)
