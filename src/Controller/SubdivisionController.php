@@ -20,10 +20,11 @@ class SubdivisionController extends AbstractController
     $name = $request->request->get('name');
     $description = $request->request->get('description');
 
-    $sub->addSubdivision($name, $description);
+    $id = $sub->addSubdivision($name, $description);
 
-    return $this->json(['status' => "OK", 'message' => [], 'data' => []]);
+    return $this->json(['status' => "OK", 'message' => [], 'data' => [$id]]);
   }
+
   public function updateSubdivision(Request $request,  $ID, LibSubdivision $sub) {
     $name = $request->request->get('name');
     $description = $request->request->get('description');
@@ -32,9 +33,11 @@ class SubdivisionController extends AbstractController
 
     return $this->json(['status' => "OK", 'message' => [], 'data' => []]);
   }
+
   public function deleteSubdivision($ID, LibSubdivision $sub) {
     $sub->deleteSubdivisionByID($ID);
 
     return $this->json(['status' => "OK", 'message' => [], 'data' => []]);
   }
+
 }

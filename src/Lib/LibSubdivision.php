@@ -32,6 +32,7 @@ class LibSubdivision
          VALUES (?, ?);',
         $params
     );
+    return $this->Db->lastID();
   }
   public function updateSubdivisionByID($ID, $name, $description) {
     $params = [

@@ -76,7 +76,7 @@ class EmployeeController extends AbstractController
     $salary = $request->request->get('salary');
     $rate = $request->request->get('rate');
 
-    $subdivison = $request->request->get('subdivison');
+    $subdivison = $request->request->get('subdivision');
     $post = $request->request->get('post');
 
     if ($subdivison) {
@@ -119,7 +119,7 @@ class EmployeeController extends AbstractController
     $birthday = $request->request->get('birthday');
     $salary = (int)$request->request->get('salary');
     $rate = (float)$request->request->get('rate');
-    $subdivison = $request->request->get('subdivison');
+    $subdivison = $request->request->get('subdivision');
     $post = $request->request->get('post');
 
     $id = $employee->addEmployee($surname, $name, $patronymic, $birthday, $salary, $rate);
